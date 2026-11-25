@@ -75,7 +75,7 @@ function App() {
       {auction ? (
         <section className="auction-banner" aria-live="polite">
           <div className="auction-card-info">
-            <div><span className="auction-kicker">CURRENT AUCTION</span><h2>{auction.name}</h2><span className="auction-subtype">{auction.subtype ?? auction.category}</span></div>
+            <div><span className="auction-kicker">CURRENT AUCTION</span><div className="auction-name-line"><h2>{auction.name}</h2><span className={`hand-card-tag ${categoryClass[auction.category]}`}>{auction.subtype ?? auction.category}</span></div></div>
           </div>
           <button type="button" className="cancel-auction" onClick={() => setAuction(null)} aria-label="Cancel current auction">Cancel</button>
         </section>
@@ -103,7 +103,7 @@ function App() {
       {pickerOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPickerOpen(false) }}>
         <section className="picker-modal" role="dialog" aria-modal="true" aria-labelledby="picker-title">
           <header className="picker-header"><h2 id="picker-title">Choose auction card</h2><button type="button" className="modal-close" onClick={() => setPickerOpen(false)} aria-label="Close card picker"><X size={18} /></button></header>
-          <label className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter by name" autoFocus /></label>
+          <label className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter by name" /></label>
           <div className="picker-list">{visibleCards.length ? categories.map((item) => {
             const groupCards = visibleCards.filter((card) => card.category === item)
             if (!groupCards.length) return null
