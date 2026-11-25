@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Plus, Search, X } from 'lucide-react'
 
 type Category = 'Attack' | 'Defense' | 'Action' | 'Worthless'
 type Card = { name: string; category: Category; subtype?: string }
+type HandCard = Card & { handId: number }
 type Faction = { name: string; short: string; color: string; note: string }
 
 const cards: Card[] = [
@@ -43,16 +44,16 @@ const factions: Faction[] = [
 const categoryClass: Record<Category, string> = { Attack: 'attack', Defense: 'defense', Action: 'action', Worthless: 'worthless' }
 const categories: Category[] = ['Attack', 'Defense', 'Action', 'Worthless']
 
-type Hands = Record<string, Card[]>
+type Hands = Record<string, HandCard[]>
 
 function App() {
   const [hands, setHands] = useState<Hands>(() => Object.fromEntries(factions.map((faction) => [faction.name, []])))
+  const nextHandId = useRef(0)
   const [auction, setAuction] = useState<Card | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [query, setQuery] = useState('')
 
-  const heldNames = useMemo(() => new Set(Object.values(hands).flat().map((card) => card.name)), [hands])
-  const availableCards = cards.filter((card) => !heldNames.has(card.name) && card.name !== auction?.name)
+  const availableCards = cards
   const visibleCards = availableCards.filter((card) => card.name.toLowerCase().includes(query.trim().toLowerCase()))
   const chooseAuction = (card: Card) => {
     setAuction(card)
@@ -62,12 +63,13 @@ function App() {
 
   const awardAuction = (factionName: string) => {
     if (!auction) return
-    setHands((current) => ({ ...current, [factionName]: [...current[factionName], auction] }))
+    const awardedCard: HandCard = { ...auction, handId: nextHandId.current++ }
+    setHands((current) => ({ ...current, [factionName]: [...current[factionName], awardedCard] }))
     setAuction(null)
   }
 
-  const removeCard = (factionName: string, cardName: string) => {
-    setHands((current) => ({ ...current, [factionName]: current[factionName].filter((card) => card.name !== cardName) }))
+  const removeCard = (factionName: string, handId: number) => {
+    setHands((current) => ({ ...current, [factionName]: current[factionName].filter((card) => card.handId !== handId) }))
   }
 
   return (
@@ -80,7 +82,7 @@ function App() {
           <button type="button" className="cancel-auction" onClick={() => setAuction(null)} aria-label="Cancel current auction">Cancel</button>
         </section>
       ) : (
-        <button type="button" className="auction-cta" onClick={() => setPickerOpen(true)}><Plus size={17} /> Set card as auction</button>
+        <button type="button" className="auction-cta" onClick={() => setPickerOpen(true)}><Plus size={17} /> Add card to auction</button>
       )}
 
       <section className="faction-grid" aria-label="Faction card hands">
@@ -90,9 +92,9 @@ function App() {
             <article key={faction.name} className="faction-panel" style={{ '--faction-color': faction.color } as React.CSSProperties}>
               <header className="faction-heading"><h2>{faction.name}</h2>{auction && <button type="button" className="add-to-hand" onClick={() => awardAuction(faction.name)} title={`Add ${auction.name} to ${faction.name}`}>Add to hand</button>}</header>
               <div className="hand-list">
-                {hand.length ? hand.map((card) => <div className={`hand-card ${categoryClass[card.category]}`} key={card.name}>
+                {hand.length ? hand.map((card) => <div className={`hand-card ${categoryClass[card.category]}`} key={card.handId}>
                   <span className="hand-card-copy"><strong>{card.name}</strong><span className={`hand-card-tag ${categoryClass[card.category]}`}>{card.subtype ?? card.category}</span></span>
-                  <button type="button" className="remove-card" onClick={() => removeCard(faction.name, card.name)} aria-label={`Remove ${card.name} from ${faction.name}`} title="Remove from hand"><X size={16} /></button>
+                  <button type="button" className="remove-card" onClick={() => removeCard(faction.name, card.handId)} aria-label={`Remove ${card.name} from ${faction.name}`} title="Remove from hand"><X size={16} /></button>
                 </div>) : <p className="empty-hand">No known cards</p>}
               </div>
             </article>
@@ -102,7 +104,7 @@ function App() {
 
       {pickerOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPickerOpen(false) }}>
         <section className="picker-modal" role="dialog" aria-modal="true" aria-labelledby="picker-title">
-          <header className="picker-header"><h2 id="picker-title">Choose auction card</h2><button type="button" className="modal-close" onClick={() => setPickerOpen(false)} aria-label="Close card picker"><X size={18} /></button></header>
+          <header className="picker-header"><h2 id="picker-title">Add card to auction</h2><button type="button" className="modal-close" onClick={() => setPickerOpen(false)} aria-label="Close card picker"><X size={18} /></button></header>
           <label className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter by name" /></label>
           <div className="picker-list">{visibleCards.length ? categories.map((item) => {
             const groupCards = visibleCards.filter((card) => card.category === item)
