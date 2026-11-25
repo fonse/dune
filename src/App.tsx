@@ -31,12 +31,13 @@ const cards: Card[] = [
   { name: 'La, La, La', category: 'Worthless' },
   { name: 'Trip to Gamont', category: 'Worthless' },
 ]
+const cardOrder = new Map(cards.map((card, index) => [card.name, index]))
 
 const factions: Faction[] = [
-  { name: 'Fremen', short: 'FR', color: '#c98220', note: 'Children of the desert' },
-  { name: 'Emperor', short: 'EM', color: '#8a1d16', note: 'House Corrino' },
-  { name: 'Harkonnen', short: 'HA', color: '#28292a', note: 'House Harkonnen' },
   { name: 'Bene Gesserit', short: 'BG', color: '#1e3d70', note: 'The Sisterhood' },
+  { name: 'Emperor', short: 'EM', color: '#8a1d16', note: 'House Corrino' },
+  { name: 'Fremen', short: 'FR', color: '#c98220', note: 'Children of the desert' },
+  { name: 'Harkonnen', short: 'HA', color: '#28292a', note: 'House Harkonnen' },
   { name: 'Spacing Guild', short: 'SG', color: '#cb4e1f', note: 'The Guild' },
 ]
 const categoryClass: Record<Category, string> = { Attack: 'attack', Defense: 'defense', Action: 'action', Worthless: 'worthless' }
@@ -72,15 +73,11 @@ function App() {
   return (
     <main className="app-shell">
       {auction ? (
-        <section className={`auction-banner ${categoryClass[auction.category]}`} aria-live="polite">
+        <section className="auction-banner" aria-live="polite">
           <div className="auction-card-info">
-            <div><span className="auction-kicker">CURRENT AUCTION · {auction.category.toUpperCase()}</span><h2>{auction.name}</h2><span className="auction-subtype">{auction.subtype ?? auction.category}</span></div>
+            <div><span className="auction-kicker">CURRENT AUCTION</span><h2>{auction.name}</h2><span className="auction-subtype">{auction.subtype ?? auction.category}</span></div>
           </div>
-          <div className="auction-actions">
-            <span className="award-label">Assign winner</span>
-            <div className="award-buttons">{factions.map((faction) => <button key={faction.name} type="button" className="award-button" onClick={() => awardAuction(faction.name)} title={`Assign ${auction.name} to ${faction.name}`}>{faction.name}</button>)}</div>
-          </div>
-          <button type="button" className="cancel-auction" onClick={() => setAuction(null)} aria-label="Cancel current auction"><X size={16} /><span>Cancel</span></button>
+          <button type="button" className="cancel-auction" onClick={() => setAuction(null)} aria-label="Cancel current auction">Cancel</button>
         </section>
       ) : (
         <button type="button" className="auction-cta" onClick={() => setPickerOpen(true)}><Plus size={17} /> Set card as auction</button>
@@ -88,10 +85,10 @@ function App() {
 
       <section className="faction-grid" aria-label="Faction card hands">
         {factions.map((faction) => {
-          const hand = hands[faction.name]
+          const hand = [...hands[faction.name]].sort((left, right) => (cardOrder.get(left.name) ?? 0) - (cardOrder.get(right.name) ?? 0))
           return (
             <article key={faction.name} className="faction-panel" style={{ '--faction-color': faction.color } as React.CSSProperties}>
-              <header className="faction-heading"><h2>{faction.name}</h2></header>
+              <header className="faction-heading"><h2>{faction.name}</h2>{auction && <button type="button" className="add-to-hand" onClick={() => awardAuction(faction.name)} title={`Add ${auction.name} to ${faction.name}`}>Add to hand</button>}</header>
               <div className="hand-list">
                 {hand.length ? hand.map((card) => <div className={`hand-card ${categoryClass[card.category]}`} key={card.name}>
                   <span className="hand-card-copy"><strong>{card.name}</strong><span className={`hand-card-tag ${categoryClass[card.category]}`}>{card.subtype ?? card.category}</span></span>
