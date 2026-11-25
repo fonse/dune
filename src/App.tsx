@@ -6,18 +6,18 @@ type Card = { name: string; category: Category; subtype?: string }
 type Faction = { name: string; short: string; color: string; note: string }
 
 const cards: Card[] = [
-  { name: 'Crysknife', category: 'Attack', subtype: 'Weapon · Kinetic' },
-  { name: 'Maula Pistol', category: 'Attack', subtype: 'Weapon · Kinetic' },
-  { name: 'Slip Tip', category: 'Attack', subtype: 'Weapon · Kinetic' },
-  { name: 'Stunner', category: 'Attack', subtype: 'Weapon · Kinetic' },
-  { name: 'Chaumas', category: 'Attack', subtype: 'Weapon · Poison' },
-  { name: 'Chaumurky', category: 'Attack', subtype: 'Weapon · Poison' },
-  { name: 'Elacca Drug', category: 'Attack', subtype: 'Weapon · Poison' },
-  { name: 'Gom Jabbar', category: 'Attack', subtype: 'Weapon · Poison' },
-  { name: 'Lasgun', category: 'Attack', subtype: 'Weapon · Special' },
-  { name: 'Shield', category: 'Defense', subtype: 'Defense · Kinetic' },
-  { name: 'Snooper', category: 'Defense', subtype: 'Defense · Poison' },
-  { name: 'Cheap Hero', category: 'Action', subtype: 'Action · Leader' },
+  { name: 'Crysknife', category: 'Attack', subtype: 'Weapon - Kinetic' },
+  { name: 'Maula Pistol', category: 'Attack', subtype: 'Weapon - Kinetic' },
+  { name: 'Slip Tip', category: 'Attack', subtype: 'Weapon - Kinetic' },
+  { name: 'Stunner', category: 'Attack', subtype: 'Weapon - Kinetic' },
+  { name: 'Chaumas', category: 'Attack', subtype: 'Weapon - Poison' },
+  { name: 'Chaumurky', category: 'Attack', subtype: 'Weapon - Poison' },
+  { name: 'Elacca Drug', category: 'Attack', subtype: 'Weapon - Poison' },
+  { name: 'Gom Jabbar', category: 'Attack', subtype: 'Weapon - Poison' },
+  { name: 'Lasgun', category: 'Attack', subtype: 'Weapon - Special' },
+  { name: 'Shield', category: 'Defense', subtype: 'Defense - Kinetic' },
+  { name: 'Snooper', category: 'Defense', subtype: 'Defense - Poison' },
+  { name: 'Cheap Hero', category: 'Action', subtype: 'Action - Leader' },
   { name: 'Family Atomics', category: 'Action' },
   { name: 'Harj', category: 'Action' },
   { name: 'Karama', category: 'Action' },
@@ -94,7 +94,7 @@ function App() {
               <header className="faction-heading"><h2>{faction.name}</h2></header>
               <div className="hand-list">
                 {hand.length ? hand.map((card) => <div className={`hand-card ${categoryClass[card.category]}`} key={card.name}>
-                  <span className="hand-card-copy"><strong>{card.name}</strong><small>{card.subtype ?? card.category}</small></span>
+                  <span className="hand-card-copy"><strong>{card.name}</strong><span className={`hand-card-tag ${categoryClass[card.category]}`}>{card.subtype ?? card.category}</span></span>
                   <button type="button" className="remove-card" onClick={() => removeCard(faction.name, card.name)} aria-label={`Remove ${card.name} from ${faction.name}`} title="Remove from hand"><X size={16} /></button>
                 </div>) : <p className="empty-hand">No known cards</p>}
               </div>
