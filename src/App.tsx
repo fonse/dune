@@ -1,0 +1,124 @@
+import { useMemo, useState } from 'react'
+import { Plus, Search, X } from 'lucide-react'
+
+type Category = 'Attack' | 'Defense' | 'Action' | 'Worthless'
+type Card = { name: string; category: Category; subtype?: string }
+type Faction = { name: string; short: string; color: string; note: string }
+
+const cards: Card[] = [
+  { name: 'Crysknife', category: 'Attack', subtype: 'Weapon · Kinetic' },
+  { name: 'Maula Pistol', category: 'Attack', subtype: 'Weapon · Kinetic' },
+  { name: 'Slip Tip', category: 'Attack', subtype: 'Weapon · Kinetic' },
+  { name: 'Stunner', category: 'Attack', subtype: 'Weapon · Kinetic' },
+  { name: 'Chaumas', category: 'Attack', subtype: 'Weapon · Poison' },
+  { name: 'Chaumurky', category: 'Attack', subtype: 'Weapon · Poison' },
+  { name: 'Elacca Drug', category: 'Attack', subtype: 'Weapon · Poison' },
+  { name: 'Gom Jabbar', category: 'Attack', subtype: 'Weapon · Poison' },
+  { name: 'Lasgun', category: 'Attack', subtype: 'Weapon · Special' },
+  { name: 'Shield', category: 'Defense', subtype: 'Defense · Kinetic' },
+  { name: 'Snooper', category: 'Defense', subtype: 'Defense · Poison' },
+  { name: 'Cheap Hero', category: 'Action', subtype: 'Action · Leader' },
+  { name: 'Family Atomics', category: 'Action' },
+  { name: 'Harj', category: 'Action' },
+  { name: 'Karama', category: 'Action' },
+  { name: 'Solaris', category: 'Action' },
+  { name: 'Tleilaxu Ghola', category: 'Action' },
+  { name: 'Truthtrance', category: 'Action' },
+  { name: 'Weather Control', category: 'Action' },
+  { name: 'Baliset', category: 'Worthless' },
+  { name: 'Jubba Clopak', category: 'Worthless' },
+  { name: 'Kulon', category: 'Worthless' },
+  { name: 'La, La, La', category: 'Worthless' },
+  { name: 'Trip to Gamont', category: 'Worthless' },
+]
+
+const factions: Faction[] = [
+  { name: 'Fremen', short: 'FR', color: '#c98220', note: 'Children of the desert' },
+  { name: 'Emperor', short: 'EM', color: '#8a1d16', note: 'House Corrino' },
+  { name: 'Harkonnen', short: 'HA', color: '#28292a', note: 'House Harkonnen' },
+  { name: 'Bene Gesserit', short: 'BG', color: '#1e3d70', note: 'The Sisterhood' },
+  { name: 'Spacing Guild', short: 'SG', color: '#cb4e1f', note: 'The Guild' },
+]
+const categoryClass: Record<Category, string> = { Attack: 'attack', Defense: 'defense', Action: 'action', Worthless: 'worthless' }
+const categories: Category[] = ['Attack', 'Defense', 'Action', 'Worthless']
+
+type Hands = Record<string, Card[]>
+
+function App() {
+  const [hands, setHands] = useState<Hands>(() => Object.fromEntries(factions.map((faction) => [faction.name, []])))
+  const [auction, setAuction] = useState<Card | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [query, setQuery] = useState('')
+
+  const heldNames = useMemo(() => new Set(Object.values(hands).flat().map((card) => card.name)), [hands])
+  const availableCards = cards.filter((card) => !heldNames.has(card.name) && card.name !== auction?.name)
+  const visibleCards = availableCards.filter((card) => card.name.toLowerCase().includes(query.trim().toLowerCase()))
+  const chooseAuction = (card: Card) => {
+    setAuction(card)
+    setPickerOpen(false)
+    setQuery('')
+  }
+
+  const awardAuction = (factionName: string) => {
+    if (!auction) return
+    setHands((current) => ({ ...current, [factionName]: [...current[factionName], auction] }))
+    setAuction(null)
+  }
+
+  const removeCard = (factionName: string, cardName: string) => {
+    setHands((current) => ({ ...current, [factionName]: current[factionName].filter((card) => card.name !== cardName) }))
+  }
+
+  return (
+    <main className="app-shell">
+      {auction ? (
+        <section className={`auction-banner ${categoryClass[auction.category]}`} aria-live="polite">
+          <div className="auction-card-info">
+            <div><span className="auction-kicker">CURRENT AUCTION · {auction.category.toUpperCase()}</span><h2>{auction.name}</h2><span className="auction-subtype">{auction.subtype ?? auction.category}</span></div>
+          </div>
+          <div className="auction-actions">
+            <span className="award-label">Assign winner</span>
+            <div className="award-buttons">{factions.map((faction) => <button key={faction.name} type="button" className="award-button" onClick={() => awardAuction(faction.name)} title={`Assign ${auction.name} to ${faction.name}`}>{faction.name}</button>)}</div>
+          </div>
+          <button type="button" className="cancel-auction" onClick={() => setAuction(null)} aria-label="Cancel current auction"><X size={16} /><span>Cancel</span></button>
+        </section>
+      ) : (
+        <button type="button" className="auction-cta" onClick={() => setPickerOpen(true)}><Plus size={17} /> Set card as auction</button>
+      )}
+
+      <section className="faction-grid" aria-label="Faction card hands">
+        {factions.map((faction) => {
+          const hand = hands[faction.name]
+          return (
+            <article key={faction.name} className="faction-panel" style={{ '--faction-color': faction.color } as React.CSSProperties}>
+              <header className="faction-heading"><h2>{faction.name}</h2></header>
+              <div className="hand-list">
+                {hand.length ? hand.map((card) => <div className={`hand-card ${categoryClass[card.category]}`} key={card.name}>
+                  <span className="hand-card-copy"><strong>{card.name}</strong><small>{card.subtype ?? card.category}</small></span>
+                  <button type="button" className="remove-card" onClick={() => removeCard(faction.name, card.name)} aria-label={`Remove ${card.name} from ${faction.name}`} title="Remove from hand"><X size={16} /></button>
+                </div>) : <p className="empty-hand">No known cards</p>}
+              </div>
+            </article>
+          )
+        })}
+      </section>
+
+      {pickerOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPickerOpen(false) }}>
+        <section className="picker-modal" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+          <header className="picker-header"><h2 id="picker-title">Choose auction card</h2><button type="button" className="modal-close" onClick={() => setPickerOpen(false)} aria-label="Close card picker"><X size={18} /></button></header>
+          <label className="search-box"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter by name" autoFocus /></label>
+          <div className="picker-list">{visibleCards.length ? categories.map((item) => {
+            const groupCards = visibleCards.filter((card) => card.category === item)
+            if (!groupCards.length) return null
+            return <section className="picker-group" key={item} aria-label={`${item} cards`}>
+              <h3 className={`picker-group-title ${categoryClass[item]}`}>{item}</h3>
+              {groupCards.map((card) => <button key={card.name} type="button" className={`picker-card ${categoryClass[card.category]}`} onClick={() => chooseAuction(card)}><span className="picker-card-copy"><strong>{card.name}</strong><small>{card.subtype ?? card.category}</small></span></button>)}
+            </section>
+          }) : <div className="no-results">No available cards match that search.</div>}</div>
+        </section>
+      </div>}
+    </main>
+  )
+}
+
+export default App
