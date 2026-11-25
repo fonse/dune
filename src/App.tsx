@@ -4,7 +4,7 @@ import { Plus, Search, X } from 'lucide-react'
 type Category = 'Attack' | 'Defense' | 'Action' | 'Worthless'
 type Card = { name: string; category: Category; subtype?: string }
 type HandCard = Card & { handId: number }
-type Faction = { name: string; short: string; color: string; note: string }
+type Faction = { name: string; color: string }
 
 const cards: Card[] = [
   { name: 'Crysknife', category: 'Attack', subtype: 'Weapon - Kinetic' },
@@ -35,11 +35,11 @@ const cards: Card[] = [
 const cardOrder = new Map(cards.map((card, index) => [card.name, index]))
 
 const factions: Faction[] = [
-  { name: 'Bene Gesserit', short: 'BG', color: '#1e3d70', note: 'The Sisterhood' },
-  { name: 'Emperor', short: 'EM', color: '#8a1d16', note: 'House Corrino' },
-  { name: 'Fremen', short: 'FR', color: '#c98220', note: 'Children of the desert' },
-  { name: 'Harkonnen', short: 'HA', color: '#28292a', note: 'House Harkonnen' },
-  { name: 'Spacing Guild', short: 'SG', color: '#cb4e1f', note: 'The Guild' },
+  { name: 'Bene Gesserit', color: '#1e3d70' },
+  { name: 'Emperor', color: '#8a1d16' },
+  { name: 'Fremen', color: '#c98220' },
+  { name: 'Harkonnen', color: '#28292a' },
+  { name: 'Spacing Guild', color: '#cb4e1f' },
 ]
 const categoryClass: Record<Category, string> = { Attack: 'attack', Defense: 'defense', Action: 'action', Worthless: 'worthless' }
 const categories: Category[] = ['Attack', 'Defense', 'Action', 'Worthless']
@@ -53,8 +53,8 @@ function App() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [query, setQuery] = useState('')
 
-  const availableCards = cards
-  const visibleCards = availableCards.filter((card) => card.name.toLowerCase().includes(query.trim().toLowerCase()))
+  const auctionableCards = cards
+  const visibleCards = auctionableCards.filter((card) => card.name.toLowerCase().includes(query.trim().toLowerCase()))
   const chooseAuction = (card: Card) => {
     setAuction(card)
     setPickerOpen(false)
@@ -92,7 +92,7 @@ function App() {
             <article key={faction.name} className="faction-panel" style={{ '--faction-color': faction.color } as React.CSSProperties}>
               <header className="faction-heading"><h2>{faction.name}</h2>{auction && <button type="button" className="add-to-hand" onClick={() => awardAuction(faction.name)} title={`Add ${auction.name} to ${faction.name}`}>Add to hand</button>}</header>
               <div className="hand-list">
-                {hand.length ? hand.map((card) => <div className={`hand-card ${categoryClass[card.category]}`} key={card.handId}>
+                {hand.length ? hand.map((card) => <div className="hand-card" key={card.handId}>
                   <span className="hand-card-copy"><strong>{card.name}</strong><span className={`hand-card-tag ${categoryClass[card.category]}`}>{card.subtype ?? card.category}</span></span>
                   <button type="button" className="remove-card" onClick={() => removeCard(faction.name, card.handId)} aria-label={`Remove ${card.name} from ${faction.name}`} title="Remove from hand"><X size={16} /></button>
                 </div>) : <p className="empty-hand">No known cards</p>}
@@ -110,7 +110,7 @@ function App() {
             const groupCards = visibleCards.filter((card) => card.category === item)
             if (!groupCards.length) return null
             return <section className="picker-group" key={item} aria-label={`${item} cards`}>
-              <h3 className={`picker-group-title ${categoryClass[item]}`}>{item}</h3>
+              <h3 className="picker-group-title">{item}</h3>
               {groupCards.map((card) => <button key={card.name} type="button" className={`picker-card ${categoryClass[card.category]}`} onClick={() => chooseAuction(card)}><span className="picker-card-copy"><strong>{card.name}</strong><small>{card.subtype ?? card.category}</small></span></button>)}
             </section>
           }) : <div className="no-results">No available cards match that search.</div>}</div>
